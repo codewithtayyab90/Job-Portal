@@ -7,6 +7,7 @@ const connectDB = require('./db-configuration/connect.js')
 const authRoutes = require('./routes/authRoutes.js')
 const jobRoutes = require('./routes/jobRoutes.js')
 const applicationRoutes = require('./routes/applicationRoutes.js')
+const PORT = process.env.PORT || 8000
 
 app.use(express.json())
 app.use(cors())
