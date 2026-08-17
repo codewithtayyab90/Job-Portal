@@ -15,6 +15,6 @@ connectDB()
 app.use('/api/auth', authRoutes)
 app.use('/api/applications', applicationRoutes)
 app.use('/api/jobs', jobRoutes)
-app.listen(process.env.PORT, ()=>{
+app.listen(PORT, ()=>{
     console.log(`Server Connect On This Port ${process.env.PORT}`)
 })
