@@ -8,6 +8,7 @@ import Dashboard from './pages/Dashboard'
 import ApplyJob from './pages/ApplyJob'
 import MyApplications from './pages/MyApplications'
 import EditJob from './pages/EditJob'
+import AdminDashboard from './pages/AdminDashboard'
 import { Toaster } from 'react-hot-toast'
 
   function Layout(){
@@ -27,6 +28,7 @@ import { Toaster } from 'react-hot-toast'
       <Route path='/applications' element={<ApplyJob />} />
       <Route path='/edit-job/:id' element={<EditJob />} />
       <Route path='/my-applications' element={<MyApplications />} />
+      <Route path='/admin-dashboard' element={<AdminDashboard />} />
     </Routes>
     </>
   )

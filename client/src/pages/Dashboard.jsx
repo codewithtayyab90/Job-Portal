@@ -100,7 +100,7 @@ function Dashboard(){
 
                     <div className="p-5 bg-white border-2 border-[#171B2E]/10 rounded-2xl">
                         <h2 className="text-sm font-semibold text-[#171B2E]/50 uppercase tracking-wide font-mono-tag">Interviews</h2>
-                        <p className="text-3xl font-bold text-[#171B2E] mt-1">0</p>
+                        <p className="text-3xl font-bold text-[#171B2E] mt-1">{applications.filter(app => app.status === "interview").length}</p>
                     </div>
                 </div>
 
@@ -118,6 +118,11 @@ function Dashboard(){
                                     <p className="text-[#171B2E]/60 text-sm mt-1">
                                         {app.candidate?.name} — {app.candidate?.email}
                                     </p>
+                                    {app.candidate?.cvUrl && (
+                                        <a href={app.candidate.cvUrl} target="_blank" rel="noopener noreferrer" className="text-[#2F3EE0] font-semibold text-sm hover:underline inline-block mt-1">
+                                            📄 View CV
+                                        </a>
+                                    )}
                                     <p className="mt-3 text-[#171B2E]/80">{app.coverNote}</p>
 
                                     <StatusStepper currentStatus={app.status} />

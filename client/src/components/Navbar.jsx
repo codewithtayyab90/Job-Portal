@@ -40,7 +40,11 @@ function Navbar(){
                         </Link>
                     </>
                 )}
-
+                {user?.role === 'admin' && (
+                  <Link to="/admin-dashboard" className="text-[#171B2E] font-semibold hover:text-[#FF5A3C]">
+                      Admin Panel
+                  </Link>
+                    )}
                 {user?.role === 'candidate' && (
                     <>
                         <Link to="/jobs" className="text-[#171B2E] font-semibold hover:text-[#FF5A3C] transition">

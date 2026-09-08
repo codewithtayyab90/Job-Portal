@@ -26,11 +26,11 @@ function Login(){
             localStorage.setItem('token', res.data.token)
             localStorage.setItem('user', JSON.stringify(res.data.user))
             if(res.data.user.role === 'recruiter'){
-                navigate('/dashboard')
-                toast.success("Login Successfully")
+            navigate('/dashboard')
+            }else if(res.data.user.role === 'admin'){
+                navigate('/admin-dashboard')
             }else{
                 navigate('/jobs')
-                toast.success("Login Successfully")
             }
         }catch(err){
            toast.error(err.response?.data?.message || "Something went wrong")
