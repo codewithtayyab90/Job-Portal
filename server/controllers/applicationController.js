@@ -1,5 +1,6 @@
 const Application = require('../models/Application.js')
 const Job = require('../models/Job.js')
+const User = require('../models/User.js')
 
 const applyJob = async (req, res)=>{
     try{
@@ -84,7 +85,7 @@ const getReceivedApplications = async (req, res) => {
         const applications = await Application.find({
             job: { $in: jobIds }
         }).populate('job', 'title')
-            .populate('candidate', 'name email')
+            .populate('candidate', 'name email cvUrl')
 
         res.status(200).json({
             message: "Received Applications",
@@ -97,4 +98,19 @@ const getReceivedApplications = async (req, res) => {
         })
     }
 }
-module.exports = { applyJob, getMyApplications, updateApplication, getReceivedApplications }
+const uploadCV = async (req, res) => {
+    try{
+        const user = await User.findByIdAndUpdate(
+            req.user.id,
+            { cvUrl: req.file.path },
+            { returnDocument: 'after'  }
+        )
+        res.status(200).json({
+            message: "CV uploaded successfully",
+            cvUrl: user.cvUrl
+        })
+    }catch(err){
+        res.status(500).json({ message: err.message })
+    }
+}
+module.exports = { applyJob, getMyApplications, updateApplication, getReceivedApplications, uploadCV }

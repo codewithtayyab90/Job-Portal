@@ -26,7 +26,7 @@ const createJob = async(req,res)=>{
 }
 const getAllJobs = async(req,res)=>{
     try{
-        const jobs = await Job.find()
+        const jobs = await Job.find({ status: "approved" })
         res.status(200).json({
             message:"All Jobs",
             jobs
@@ -63,7 +63,10 @@ const updateJob = async (req, res)=>{
                 message:'You can only edit your own jobs'
             })
         }
-        const jobUpdate = await Job.findByIdAndUpdate(req.params.id, req.body, {new:true})
+
+        const { status, ...allowedUpdates } = req.body
+
+        const jobUpdate = await Job.findByIdAndUpdate(req.params.id, allowedUpdates, {new:true})
         return res.status(200).json({
             message:'Job Updated Succesfully',
             job:jobUpdate
@@ -119,6 +122,38 @@ const getMyJobs = async(req, res)=>{
     }
 }
 
+const getAllJobsAdmin = async (req, res) => {
+    try{
+        const jobs = await Job.find().populate('recruiter', 'name email')
+        res.status(200).json({
+            message: "All Jobs (Admin)",
+            jobs
+        })
+    }catch(err){
+        res.status(500).json({ message: err.message })
+    }
+}
+
+const updateJobStatus = async (req, res) => {
+    try{
+        const { status } = req.body
+        const job = await Job.findByIdAndUpdate(
+            req.params.id,
+            { status },
+            { new: true }
+        )
+        if(!job){
+            return res.status(404).json({ message: "Job not found" })
+        }
+        res.status(200).json({
+            message: "Job status updated",
+            job
+        })
+    }catch(err){
+        res.status(500).json({ message: err.message })
+    }
+}
+
 module.exports = {
     createJob, 
     getAllJobs, 
@@ -126,5 +161,7 @@ module.exports = {
     updateJob, 
     getJobApplications,
     getMyJobs,
-    deleteJob
+    deleteJob,
+    getAllJobsAdmin,
+    updateJobStatus
 }

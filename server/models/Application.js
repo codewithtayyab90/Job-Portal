@@ -22,5 +22,4 @@ const applicationSchema = new mongoose.Schema({
         default:Date.now
         }
 })
-
 module.exports = mongoose.model('Application', applicationSchema.index({ job:1, candidate:1},{ unique:true}))

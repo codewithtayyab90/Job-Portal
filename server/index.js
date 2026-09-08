@@ -7,6 +7,7 @@ const connectDB = require('./db-configuration/connect.js')
 const authRoutes = require('./routes/authRoutes.js')
 const jobRoutes = require('./routes/jobRoutes.js')
 const applicationRoutes = require('./routes/applicationRoutes.js')
+const userRoutes = require('./routes/userRoutes.js')
 const PORT = process.env.PORT || 8000
 
 app.use(express.json())
@@ -15,6 +16,7 @@ connectDB()
 app.use('/api/auth', authRoutes)
 app.use('/api/applications', applicationRoutes)
 app.use('/api/jobs', jobRoutes)
+app.use('/api/user', userRoutes)
 app.listen(PORT, ()=>{
     console.log(`Server Connect On This Port ${process.env.PORT}`)
 })

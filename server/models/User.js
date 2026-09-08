@@ -21,6 +21,9 @@ const userSchema = new mongoose.Schema({
     isActive:{
         type: Boolean,
         default:true
+    },
+    cvUrl:{
+        type:String,
     }
 },
 { timestamps: true }
