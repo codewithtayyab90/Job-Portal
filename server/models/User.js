@@ -24,6 +24,12 @@ const userSchema = new mongoose.Schema({
     },
     cvUrl:{
         type:String,
+    },
+    resetToken:{
+        type:String
+    },
+    resetTokenExpiry:{
+        type:Date
     }
 },
 { timestamps: true }

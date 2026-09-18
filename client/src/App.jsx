@@ -9,11 +9,13 @@ import ApplyJob from './pages/ApplyJob'
 import MyApplications from './pages/MyApplications'
 import EditJob from './pages/EditJob'
 import AdminDashboard from './pages/AdminDashboard'
+import ForgotPassword from './pages/ForgotPassword'
+import ResetPassword from './pages/ResetPassword'
 import { Toaster } from 'react-hot-toast'
 
   function Layout(){
     const location = useLocation();
-    const hideNavbar = ['/', '/register'].includes(location.pathname)
+    const hideNavbar = ['/', '/register', '/forgot-password'].includes(location.pathname) || location.pathname.startsWith('/reset-password')
     return(
       <>
       <Toaster position="top-center" />
@@ -29,6 +31,8 @@ import { Toaster } from 'react-hot-toast'
       <Route path='/edit-job/:id' element={<EditJob />} />
       <Route path='/my-applications' element={<MyApplications />} />
       <Route path='/admin-dashboard' element={<AdminDashboard />} />
+      <Route path='/forgot-password' element={<ForgotPassword />} />
+      <Route path='/reset-password/:token' element={<ResetPassword />} />
     </Routes>
     </>
   )

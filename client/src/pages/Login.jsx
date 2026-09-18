@@ -100,9 +100,9 @@ function Login(){
                                   <label htmlFor="remember" className="text-[#171B2E]/70">Remember me</label>
                               </div>
                           </div>
-                          <a href="#" className="text-sm font-semibold text-[#2F3EE0] hover:underline">
+                          <Link to="/forgot-password" className="text-sm font-semibold text-[#2F3EE0] hover:underline">
                               Forget password
-                          </a>
+                          </Link>
                       </div>
                       <button
                           type="submit"

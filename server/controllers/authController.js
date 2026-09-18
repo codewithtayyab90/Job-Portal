@@ -1,6 +1,8 @@
 const bcrypt = require('bcryptjs')
 const User = require('../models/User')
 const jwt = require('jsonwebtoken')
+const crypto = require('crypto')
+const transporter = require('../db-configuration/email.js')
 
 const register = async(req,res)=>{
     try{
@@ -67,4 +69,61 @@ const login = async(req,res)=>{
     }
 }
 
-module.exports = { register, login }
+const forgotPassword = async(req,res)=>{
+    try{
+        const {email} = req.body
+        const user = await User.findOne({email})
+        if(!user){
+            return res.status(404).json({
+                message:"No account with this email"
+            })
+        }
+        const token = crypto.randomBytes(32).toString('hex')
+        user.resetToken = token
+        user.resetTokenExpiry = Date.now() + 3600000
+        await user.save()
+
+        const resetLink = `${process.env.FRONTEND_URL}/reset-password/${token}`
+
+        await transporter.sendMail({
+            from: process.env.EMAIL_USER,
+            to: user.email,
+            subject: "Password Reset - JobPortal",
+            html: `<p>Click below to reset your password (valid for 1 hour):</p><a href="${resetLink}">${resetLink}</a>`
+        })
+
+        res.status(200).json({ message: "Reset link sent to your email" })
+    }catch(err){
+        console.log("forgot password error", err)
+        res.status(500).json({ message: err.message })
+    }
+}
+
+const resetPassword = async(req,res)=>{
+    try{
+        const {token} = req.params
+        const {password} = req.body
+
+        const user = await User.findOne({
+            resetToken: token,
+            resetTokenExpiry: { $gt: Date.now() }
+        })
+
+        if(!user){
+            return res.status(400).json({ message: "Invalid or expired reset link" })
+        }
+
+        const hashedPassword = await bcrypt.hash(password, 10)
+        user.password = hashedPassword
+        user.resetToken = undefined
+        user.resetTokenExpiry = undefined
+        await user.save()
+
+        res.status(200).json({ message: "Password reset successful" })
+    }catch(err){
+        console.log("reset password error", err)
+        res.status(500).json({ message: err.message })
+    }
+}
+
+module.exports = { register, login, forgotPassword, resetPassword }
