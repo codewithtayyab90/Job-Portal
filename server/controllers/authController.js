@@ -2,7 +2,7 @@ const bcrypt = require('bcryptjs')
 const User = require('../models/User')
 const jwt = require('jsonwebtoken')
 const crypto = require('crypto')
-const transporter = require('../db-configuration/email.js')
+const sendEmail = require('../db-configuration/email.js')
 
 const register = async(req,res)=>{
     try{
@@ -85,8 +85,7 @@ const forgotPassword = async(req,res)=>{
 
         const resetLink = `${process.env.FRONTEND_URL}/reset-password/${token}`
 
-        await transporter.sendMail({
-            from: process.env.EMAIL_USER,
+        await sendEmail({
             to: user.email,
             subject: "Password Reset - JobPortal",
             html: `<p>Click below to reset your password (valid for 1 hour):</p><a href="${resetLink}">${resetLink}</a>`
