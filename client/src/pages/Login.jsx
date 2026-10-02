@@ -3,7 +3,7 @@ import axios from 'axios';
 import { useNavigate, Link } from "react-router-dom"
 import BASE_URL from '../config/api.js';
 import toast from 'react-hot-toast'
-
+import { GoogleLogin } from '@react-oauth/google'
 
 function Login(){
     const [formData, setFormData] = useState({
@@ -36,6 +36,28 @@ function Login(){
            toast.error(err.response?.data?.message || "Something went wrong")
         }
     }
+
+    async function googleSuccessHandler(credentialResponse){
+        try{
+            const res = await axios.post(`${BASE_URL}/api/auth/google`, {
+                credential: credentialResponse.credential
+            })
+            localStorage.setItem('token', res.data.token)
+            localStorage.setItem('user', JSON.stringify(res.data.user))
+            toast.success("Logged in with Google")
+
+            if(res.data.user.role === 'recruiter'){
+                navigate('/dashboard')
+            }else if(res.data.user.role === 'admin'){
+                navigate('/admin-dashboard')
+            }else{
+                navigate('/jobs')
+            }
+        }catch(err){
+            toast.error(err.response?.data?.message || "Something went wrong")
+        }
+    }
+
     return(
        <section className="bg-[#FBF6EC] min-h-screen">
   <div className="flex flex-col items-center justify-center px-6 py-8 mx-auto md:h-screen lg:py-0">
@@ -54,6 +76,25 @@ function Login(){
                       <h1 className="text-2xl font-bold leading-tight text-[#171B2E]" style={{fontFamily:"'Space Grotesk', sans-serif"}}>
                           Sign in to your account
                       </h1>
+                  </div>
+
+                  {/* Google Sign-In */}
+                  <div className="flex justify-center">
+                      <GoogleLogin
+                          onSuccess={googleSuccessHandler}
+                          onError={() => toast.error("Google Sign-In failed")}
+                          shape="pill"
+                          size="large"
+                          width="300"
+                          theme="outline"
+                          text="continue_with"
+                      />
+                  </div>
+
+                  <div className="flex items-center gap-3">
+                      <div className="flex-1 h-px bg-[#171B2E]/15"></div>
+                      <span className="text-[#171B2E]/40 text-xs font-semibold uppercase">or</span>
+                      <div className="flex-1 h-px bg-[#171B2E]/15"></div>
                   </div>
 
                   <form className="space-y-4" onSubmit={submitHandler}>

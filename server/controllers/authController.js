@@ -3,6 +3,9 @@ const User = require('../models/User')
 const jwt = require('jsonwebtoken')
 const crypto = require('crypto')
 const sendEmail = require('../db-configuration/email.js')
+const { OAuth2Client } = require('google-auth-library')
+
+const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID)
 
 const register = async(req,res)=>{
     try{
@@ -39,6 +42,11 @@ const login = async(req,res)=>{
                 message:"User Not Found"
             })
         }
+        if(existingUser.authProvider === 'google'){
+            return res.status(400).json({
+                message:"This account uses Google Sign-In. Please use the Google button."
+            })
+        }
             const isMatch = await bcrypt.compare(
                 password,
                 existingUser.password)
@@ -66,6 +74,54 @@ const login = async(req,res)=>{
             message:err.message
         })
 
+    }
+}
+
+const googleAuth = async(req,res)=>{
+    try{
+        const { credential, role } = req.body
+
+        const ticket = await googleClient.verifyIdToken({
+            idToken: credential,
+            audience: process.env.GOOGLE_CLIENT_ID
+        })
+        const payload = ticket.getPayload()
+        const { email, name, sub: googleId } = payload
+
+        let user = await User.findOne({ email })
+
+        if(user){
+            if(user.authProvider === 'local'){
+                return res.status(400).json({
+                    message:"This email is already registered with a password. Please login normally."
+                })
+            }
+        } else {
+            user = await User.create({
+                name,
+                email,
+                googleId,
+                authProvider: 'google',
+                role: role || 'candidate'
+            })
+        }
+
+        const token = jwt.sign({
+            id: user._id,
+            role: user.role
+        },
+        process.env.JWT_SECRET,
+        { expiresIn:'7d'}
+        )
+
+        res.status(200).json({
+            message:"Login Successfully",
+            token,
+            user
+        })
+    }catch(err){
+        console.log("google auth error", err)
+        res.status(500).json({ message: err.message })
     }
 }
 
@@ -125,4 +181,4 @@ const resetPassword = async(req,res)=>{
     }
 }
 
-module.exports = { register, login, forgotPassword, resetPassword }
+module.exports = { register, login, googleAuth, forgotPassword, resetPassword }

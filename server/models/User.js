@@ -10,13 +10,20 @@ const userSchema = new mongoose.Schema({
         required:true
     },
     password:{
-        type:String,
-        required:true
+        type:String
     },
     role:{
         type:String,
         enum:['candidate', 'recruiter', 'admin'],
         default:'candidate'
+    },
+    authProvider:{
+        type:String,
+        enum:['local', 'google'],
+        default:'local'
+    },
+    googleId:{
+        type:String
     },
     isActive:{
         type: Boolean,

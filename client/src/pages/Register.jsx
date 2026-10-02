@@ -3,6 +3,7 @@ import axios from "axios"
 import { useNavigate, Link } from "react-router-dom"
 import BASE_URL from "../config/api.js"
 import toast from 'react-hot-toast'
+import { GoogleLogin } from '@react-oauth/google'
 
 function Register(){
     const [formData, setFormData] = useState({
@@ -39,6 +40,29 @@ function Register(){
             toast.error(err.response?.data?.message || "Something went wrong")
         }
     }
+
+    async function googleSuccessHandler(credentialResponse){
+        try{
+            const res = await axios.post(`${BASE_URL}/api/auth/google`, {
+                credential: credentialResponse.credential,
+                role: formData.role
+            })
+            localStorage.setItem('token', res.data.token)
+            localStorage.setItem('user', JSON.stringify(res.data.user))
+            toast.success("Logged in with Google")
+
+            if(res.data.user.role === 'recruiter'){
+                navigate('/dashboard')
+            }else if(res.data.user.role === 'admin'){
+                navigate('/admin-dashboard')
+            }else{
+                navigate('/jobs')
+            }
+        }catch(err){
+            toast.error(err.response?.data?.message || "Something went wrong")
+        }
+    }
+
     return(
         <section className="bg-[#FBF6EC] min-h-screen">
   <div className="flex flex-col items-center justify-center px-6 py-8 mx-auto md:h-screen lg:py-0">
@@ -90,6 +114,24 @@ function Register(){
                                   Recruiter
                               </button>
                           </div>
+                      </div>
+
+                      {/* Google Sign-In */}
+                      <div className="flex justify-center">
+                          <GoogleLogin
+                            onSuccess={googleSuccessHandler}
+                            onError={() => toast.error("Google Sign-In failed")}
+                            shape="pill"
+                            size="large"
+                            width="300"
+                            theme="outline"
+                            />
+                      </div>
+
+                      <div className="flex items-center gap-3">
+                          <div className="flex-1 h-px bg-[#171B2E]/15"></div>
+                          <span className="text-[#171B2E]/40 text-xs font-semibold uppercase">or</span>
+                          <div className="flex-1 h-px bg-[#171B2E]/15"></div>
                       </div>
 
                       <div>
