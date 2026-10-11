@@ -3,6 +3,7 @@ import {useEffect, useState} from "react"
 import BASE_URL from '../config/api.js'
 import toast from 'react-hot-toast'
 import StatusStepper from '../components/StatusStepper'
+import Chat from '../components/Chat'
 
 function MyApplications(){
     const [applications, setApplications] = useState([])
@@ -58,6 +59,10 @@ function MyApplications(){
                             <p className="mt-3 text-[#171B2E]/70">{app.coverNote}</p>
 
                             <StatusStepper currentStatus={app.status} />
+
+                            {['interview', 'offered', 'hired'].includes(app.status) && (
+                                <Chat applicationId={app._id} />
+                            )}
                         </div>
                     ))
                 )}

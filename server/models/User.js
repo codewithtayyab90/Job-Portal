@@ -37,6 +37,13 @@ const userSchema = new mongoose.Schema({
     },
     resetTokenExpiry:{
         type:Date
+    },
+    isActive:{
+    type: Boolean,
+    default:true
+    },
+    lastActiveAt:{
+    type: Date
     }
 },
 { timestamps: true }

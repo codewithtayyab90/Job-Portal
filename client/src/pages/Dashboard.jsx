@@ -4,6 +4,7 @@ import {useNavigate} from "react-router-dom"
 import BASE_URL from '../config/api.js'
 import toast from 'react-hot-toast'
 import StatusStepper from '../components/StatusStepper'
+import Chat from '../components/Chat'
 
 function Dashboard(){
     const navigate = useNavigate()
@@ -142,6 +143,9 @@ function Dashboard(){
                                             <option value="rejected">Rejected</option>
                                         </select>
                                     </div>
+                                    {['interview', 'offered', 'hired'].includes(app.status) && (
+                                      <Chat applicationId={app._id} />
+                                    )}
                                 </div>
                             ))
                         )}

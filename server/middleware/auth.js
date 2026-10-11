@@ -1,4 +1,5 @@
 const jwt = require('jsonwebtoken')
+const User = require('../models/User')
 
 const authMiddleware = (req, res, next) =>{
     try{
@@ -11,6 +12,7 @@ const authMiddleware = (req, res, next) =>{
         const token = authHeader.split(" ") [1]
         const decoded = jwt.verify(token, process.env.JWT_SECRET)
         req.user = decoded
+        User.findByIdAndUpdate(decoded.id, { lastActiveAt: new Date() }).catch(function(){})
         next()
 
     }catch(err){
