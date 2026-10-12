@@ -12,12 +12,18 @@ function Register(){
         password: "",
         role: "candidate"
     })
+    const [errors, setErrors] = useState({})
+    const [loading, setLoading] = useState(false)
     const navigate = useNavigate();
 
     function changeHandler(e){
         setFormData({
             ...formData,
             [e.target.name]: e.target.value
+        })
+        setErrors({
+            ...errors,
+            [e.target.name]: ""
         })
     }
 
@@ -28,8 +34,28 @@ function Register(){
         })
     }
 
+    function validate(){
+        const newErrors = {}
+        if(formData.name.trim().length < 2){
+            newErrors.name = "Name must be at least 2 characters"
+        }
+        if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email.trim())){
+            newErrors.email = "Enter a valid email address"
+        }
+        if(formData.password.length < 8 || !/[A-Za-z]/.test(formData.password) || !/\d/.test(formData.password)){
+            newErrors.password = "Password must be 8+ characters with a letter and a number"
+        }
+        return newErrors
+    }
+
     async function submitHandler(e){
         e.preventDefault()
+        const newErrors = validate()
+        setErrors(newErrors)
+        if(Object.keys(newErrors).length > 0){
+            return
+        }
+        setLoading(true)
         try{
             const res = await axios.post(`${BASE_URL}/api/auth/register`, formData)
             if (res.status === 201){
@@ -38,6 +64,8 @@ function Register(){
             }
         }catch(err){
             toast.error(err.response?.data?.message || "Something went wrong")
+        }finally{
+            setLoading(false)
         }
     }
 
@@ -83,7 +111,7 @@ function Register(){
                       </h1>
                   </div>
 
-                  <form className="space-y-4" onSubmit={submitHandler}>
+                  <form className="space-y-4" onSubmit={submitHandler} noValidate>
 
                       {/* Role toggle */}
                       <div>
@@ -143,10 +171,14 @@ function Register(){
                               name="name"
                               value={formData.name}
                               onChange={changeHandler}
-                              className="bg-[#FBF6EC] border-2 border-[#171B2E]/15 text-[#171B2E] rounded-lg focus:ring-2 focus:ring-[#FF5A3C] focus:border-[#FF5A3C] block w-full p-2.5 outline-none transition"
+                              className={`bg-[#FBF6EC] border-2 text-[#171B2E] rounded-lg focus:ring-2 focus:ring-[#FF5A3C] focus:border-[#FF5A3C] block w-full p-2.5 outline-none transition ${
+                                  errors.name ? 'border-[#E23F5E]' : 'border-[#171B2E]/15'
+                              }`}
                               placeholder="Enter your full name"
-                              required
                           />
+                          {errors.name && (
+                              <p className="mt-1 text-xs font-semibold text-[#E23F5E]">{errors.name}</p>
+                          )}
                       </div>
 
                       <div>
@@ -158,10 +190,14 @@ function Register(){
                               name="email"
                               value={formData.email}
                               onChange={changeHandler}
-                              className="bg-[#FBF6EC] border-2 border-[#171B2E]/15 text-[#171B2E] rounded-lg focus:ring-2 focus:ring-[#FF5A3C] focus:border-[#FF5A3C] block w-full p-2.5 outline-none transition"
+                              className={`bg-[#FBF6EC] border-2 text-[#171B2E] rounded-lg focus:ring-2 focus:ring-[#FF5A3C] focus:border-[#FF5A3C] block w-full p-2.5 outline-none transition ${
+                                  errors.email ? 'border-[#E23F5E]' : 'border-[#171B2E]/15'
+                              }`}
                               placeholder="email@company.com"
-                              required
                           />
+                          {errors.email && (
+                              <p className="mt-1 text-xs font-semibold text-[#E23F5E]">{errors.email}</p>
+                          )}
                       </div>
 
                       <div>
@@ -175,16 +211,21 @@ function Register(){
                               value={formData.password}
                               onChange={changeHandler}
                               placeholder="••••••••"
-                              className="bg-[#FBF6EC] border-2 border-[#171B2E]/15 text-[#171B2E] rounded-lg focus:ring-2 focus:ring-[#FF5A3C] focus:border-[#FF5A3C] block w-full p-2.5 outline-none transition"
-                              required
+                              className={`bg-[#FBF6EC] border-2 text-[#171B2E] rounded-lg focus:ring-2 focus:ring-[#FF5A3C] focus:border-[#FF5A3C] block w-full p-2.5 outline-none transition ${
+                                  errors.password ? 'border-[#E23F5E]' : 'border-[#171B2E]/15'
+                              }`}
                           />
+                          {errors.password && (
+                              <p className="mt-1 text-xs font-semibold text-[#E23F5E]">{errors.password}</p>
+                          )}
                       </div>
 
                       <button
                           type="submit"
-                          className="w-full text-white bg-[#FF5A3C] hover:bg-[#e64d2e] focus:ring-4 focus:outline-none focus:ring-[#FF5A3C]/30 font-bold rounded-lg text-sm px-5 py-3 text-center transition"
+                          disabled={loading}
+                          className="w-full text-white bg-[#FF5A3C] hover:bg-[#e64d2e] focus:ring-4 focus:outline-none focus:ring-[#FF5A3C]/30 font-bold rounded-lg text-sm px-5 py-3 text-center transition disabled:opacity-60 disabled:cursor-not-allowed"
                       >
-                          Create account
+                          {loading ? 'Creating account...' : 'Create account'}
                       </button>
 
                       <p className="text-sm font-medium text-[#171B2E]/60 text-center">

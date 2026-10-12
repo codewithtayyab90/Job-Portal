@@ -7,9 +7,30 @@ const { OAuth2Client } = require('google-auth-library')
 
 const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID)
 
+const ALLOWED_ROLES = ['candidate', 'recruiter']
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+
+function isStrongPassword(password){
+    return password.length >= 8 && /[A-Za-z]/.test(password) && /\d/.test(password)
+}
+
 const register = async(req,res)=>{
     try{
-        const {name, email, password, role} = req.body
+        const name = String(req.body.name || '').trim()
+        const email = String(req.body.email || '').trim()
+        const password = String(req.body.password || '')
+        const role = ALLOWED_ROLES.includes(req.body.role) ? req.body.role : 'candidate'
+
+        if(name.length < 2){
+            return res.status(400).json({ message: "Name must be at least 2 characters" })
+        }
+        if(!EMAIL_REGEX.test(email)){
+            return res.status(400).json({ message: "Enter a valid email address" })
+        }
+        if(!isStrongPassword(password)){
+            return res.status(400).json({ message: "Password must be 8+ characters with a letter and a number" })
+        }
+
         const existingUser = await User.findOne({email})
         if(existingUser){
             return res.status(400).json({ message: "Email Already Exist"})
@@ -33,6 +54,7 @@ const register = async(req,res)=>{
         }) 
     }
 }
+
 const login = async(req,res)=>{
     try{
         const {email, password} = req.body
@@ -42,38 +64,37 @@ const login = async(req,res)=>{
                 message:"User Not Found"
             })
         }
-        if(existingUser.authProvider === 'google'){
+        if(!existingUser.password){
             return res.status(400).json({
-                message:"This account uses Google Sign-In. Please use the Google button."
+                message:"This account was created with Google. Use the Google button, or set a password using Forget password."
             })
         }
-            const isMatch = await bcrypt.compare(
-                password,
-                existingUser.password)
+        const isMatch = await bcrypt.compare(
+            password,
+            existingUser.password)
 
-            if(!isMatch){
-                return res.status(401).json({
-                    message:"Invalid Password"
-                })
-            }
-            const token = jwt.sign({
-                id: existingUser._id,
-                role: existingUser.role
-            },
-            process.env.JWT_SECRET,
-            { expiresIn:'7d'}
+        if(!isMatch){
+            return res.status(401).json({
+                message:"Invalid Password"
+            })
+        }
+        const token = jwt.sign({
+            id: existingUser._id,
+            role: existingUser.role
+        },
+        process.env.JWT_SECRET,
+        { expiresIn:'7d'}
         )
         const {password:_, ...userWithoutPassword} = existingUser.toObject()
-          return  res.status(200).json({
-                message:"Login Successfully",
-                token,
-                user:userWithoutPassword
-            })
+        return res.status(200).json({
+            message:"Login Successfully",
+            token,
+            user:userWithoutPassword
+        })
     }catch(err){
         res.status(500).json({
             message:err.message
         })
-
     }
 }
 
@@ -88,13 +109,16 @@ const googleAuth = async(req,res)=>{
         const payload = ticket.getPayload()
         const { email, name, sub: googleId } = payload
 
+        if(!payload.email_verified){
+            return res.status(400).json({ message: "Google email is not verified" })
+        }
+
         let user = await User.findOne({ email })
 
         if(user){
-            if(user.authProvider === 'local'){
-                return res.status(400).json({
-                    message:"This email is already registered with a password. Please login normally."
-                })
+            if(!user.googleId){
+                user.googleId = googleId
+                await user.save()
             }
         } else {
             user = await User.create({
@@ -102,7 +126,7 @@ const googleAuth = async(req,res)=>{
                 email,
                 googleId,
                 authProvider: 'google',
-                role: role || 'candidate'
+                role: ALLOWED_ROLES.includes(role) ? role : 'candidate'
             })
         }
 
@@ -114,10 +138,12 @@ const googleAuth = async(req,res)=>{
         { expiresIn:'7d'}
         )
 
+        const { password:_p, resetToken:_r, resetTokenExpiry:_e, ...safeUser } = user.toObject()
+
         res.status(200).json({
             message:"Login Successfully",
             token,
-            user
+            user: safeUser
         })
     }catch(err){
         console.log("google auth error", err)
@@ -157,7 +183,11 @@ const forgotPassword = async(req,res)=>{
 const resetPassword = async(req,res)=>{
     try{
         const {token} = req.params
-        const {password} = req.body
+        const password = String(req.body.password || '')
+
+        if(!isStrongPassword(password)){
+            return res.status(400).json({ message: "Password must be 8+ characters with a letter and a number" })
+        }
 
         const user = await User.findOne({
             resetToken: token,
