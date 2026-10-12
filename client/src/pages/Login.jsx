@@ -10,30 +10,62 @@ function Login(){
         email: "",
         password: ""
     })
+    const [errors, setErrors] = useState({})
+    const [loading, setLoading] = useState(false)
     const navigate = useNavigate();
-
 
     function changeHandler(e){
         setFormData({
             ...formData,
             [e.target.name]: e.target.value
         })
+        setErrors({
+            ...errors,
+            [e.target.name]: ""
+        })
     }
+
+    function validate(){
+        const newErrors = {}
+        if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email.trim())){
+            newErrors.email = "Enter a valid email address"
+        }
+        if(!formData.password){
+            newErrors.password = "Password is required"
+        }
+        return newErrors
+    }
+
+    function redirectByRole(role){
+        if(role === 'recruiter'){
+            navigate('/dashboard')
+        }else if(role === 'admin'){
+            navigate('/admin-dashboard')
+        }else{
+            navigate('/jobs')
+        }
+    }
+
     async function submitHandler(e){
         e.preventDefault()
+        const newErrors = validate()
+        setErrors(newErrors)
+        if(Object.keys(newErrors).length > 0){
+            return
+        }
+        setLoading(true)
         try{
-            const res = await axios.post(`${BASE_URL}/api/auth/login`, formData)
+            const res = await axios.post(`${BASE_URL}/api/auth/login`, {
+                email: formData.email.trim(),
+                password: formData.password
+            })
             localStorage.setItem('token', res.data.token)
             localStorage.setItem('user', JSON.stringify(res.data.user))
-            if(res.data.user.role === 'recruiter'){
-            navigate('/dashboard')
-            }else if(res.data.user.role === 'admin'){
-                navigate('/admin-dashboard')
-            }else{
-                navigate('/jobs')
-            }
+            redirectByRole(res.data.user.role)
         }catch(err){
            toast.error(err.response?.data?.message || "Something went wrong")
+        }finally{
+            setLoading(false)
         }
     }
 
@@ -45,14 +77,7 @@ function Login(){
             localStorage.setItem('token', res.data.token)
             localStorage.setItem('user', JSON.stringify(res.data.user))
             toast.success("Logged in with Google")
-
-            if(res.data.user.role === 'recruiter'){
-                navigate('/dashboard')
-            }else if(res.data.user.role === 'admin'){
-                navigate('/admin-dashboard')
-            }else{
-                navigate('/jobs')
-            }
+            redirectByRole(res.data.user.role)
         }catch(err){
             toast.error(err.response?.data?.message || "Something went wrong")
         }
@@ -97,7 +122,7 @@ function Login(){
                       <div className="flex-1 h-px bg-[#171B2E]/15"></div>
                   </div>
 
-                  <form className="space-y-4" onSubmit={submitHandler}>
+                  <form className="space-y-4" onSubmit={submitHandler} noValidate>
                       <div>
                           <label htmlFor="email" className="block mb-2 text-sm font-semibold text-[#171B2E]">
                               Your email
@@ -107,10 +132,14 @@ function Login(){
                               name="email"
                               value={formData.email}
                               onChange={changeHandler}
-                              className="bg-[#FBF6EC] border-2 border-[#171B2E]/15 text-[#171B2E] rounded-lg focus:ring-2 focus:ring-[#FF5A3C] focus:border-[#FF5A3C] block w-full p-2.5 outline-none transition"
+                              className={`bg-[#FBF6EC] border-2 text-[#171B2E] rounded-lg focus:ring-2 focus:ring-[#FF5A3C] focus:border-[#FF5A3C] block w-full p-2.5 outline-none transition ${
+                                  errors.email ? 'border-[#E23F5E]' : 'border-[#171B2E]/15'
+                              }`}
                               placeholder="name@company.com"
-                              required
                           />
+                          {errors.email && (
+                              <p className="mt-1 text-xs font-semibold text-[#E23F5E]">{errors.email}</p>
+                          )}
                       </div>
                       <div>
                           <label htmlFor="password" className="block mb-2 text-sm font-semibold text-[#171B2E]">
@@ -123,33 +152,25 @@ function Login(){
                               value={formData.password}
                               onChange={changeHandler}
                               placeholder="••••••••"
-                              className="bg-[#FBF6EC] border-2 border-[#171B2E]/15 text-[#171B2E] rounded-lg focus:ring-2 focus:ring-[#FF5A3C] focus:border-[#FF5A3C] block w-full p-2.5 outline-none transition"
-                              required
+                              className={`bg-[#FBF6EC] border-2 text-[#171B2E] rounded-lg focus:ring-2 focus:ring-[#FF5A3C] focus:border-[#FF5A3C] block w-full p-2.5 outline-none transition ${
+                                  errors.password ? 'border-[#E23F5E]' : 'border-[#171B2E]/15'
+                              }`}
                           />
+                          {errors.password && (
+                              <p className="mt-1 text-xs font-semibold text-[#E23F5E]">{errors.password}</p>
+                          )}
                       </div>
-                      <div className="flex items-center justify-between">
-                          <div className="flex items-start">
-                              <div className="flex items-center h-5">
-                                  <input
-                                      id="remember"
-                                      aria-describedby="remember"
-                                      type="checkbox"
-                                      className="w-4 h-4 border-2 border-[#171B2E]/20 rounded accent-[#FF5A3C]"
-                                  />
-                              </div>
-                              <div className="ml-3 text-sm">
-                                  <label htmlFor="remember" className="text-[#171B2E]/70">Remember me</label>
-                              </div>
-                          </div>
+                      <div className="flex items-center justify-end">
                           <Link to="/forgot-password" className="text-sm font-semibold text-[#2F3EE0] hover:underline">
                               Forget password
                           </Link>
                       </div>
                       <button
                           type="submit"
-                          className="w-full text-white bg-[#FF5A3C] hover:bg-[#e64d2e] focus:ring-4 focus:outline-none focus:ring-[#FF5A3C]/30 font-bold rounded-lg text-sm px-5 py-3 text-center transition"
+                          disabled={loading}
+                          className="w-full text-white bg-[#FF5A3C] hover:bg-[#e64d2e] focus:ring-4 focus:outline-none focus:ring-[#FF5A3C]/30 font-bold rounded-lg text-sm px-5 py-3 text-center transition disabled:opacity-60 disabled:cursor-not-allowed"
                       >
-                          Sign in
+                          {loading ? 'Signing in...' : 'Sign in'}
                       </button>
                       <p className="text-sm font-medium text-[#171B2E]/60 text-center">
                           Don't have an account yet?{' '}
