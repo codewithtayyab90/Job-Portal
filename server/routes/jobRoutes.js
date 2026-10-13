@@ -6,7 +6,7 @@ const roleMiddleware = require('../middleware/roleMiddleware.js')
 
 router.post('/', middleware, roleMiddleware('recruiter'), createJob)
 router.get('/', getAllJobs)
-router.get('/my-jobs', middleware, getMyJobs)
+router.get('/my-jobs', middleware, roleMiddleware('recruiter'), getMyJobs)
 router.get('/admin/all-jobs', middleware, roleMiddleware('admin'), getAllJobsAdmin)
 router.patch('/:id/status', middleware, roleMiddleware('admin'), updateJobStatus)
 router.get('/:id/applications', middleware, roleMiddleware('recruiter'), getJobApplications)
