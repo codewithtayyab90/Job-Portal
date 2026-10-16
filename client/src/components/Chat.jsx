@@ -89,12 +89,12 @@ function Chat({ applicationId }){
                     onChange={(e) => setText(e.target.value)}
                     maxLength={1000}
                     placeholder="Type a message..."
-                    className="flex-1 bg-[#FBF6EC] border-2 border-[#171B2E]/15 text-[#171B2E] rounded-lg p-2.5 outline-none focus:border-[#FF5A3C]"
+                    className="flex-1 min-w-0 bg-[#FBF6EC] border-2 border-[#171B2E]/15 text-[#171B2E] rounded-lg p-2.5 outline-none focus:border-[#FF5A3C]"
                 />
                 <button
                     type="submit"
                     disabled={sending}
-                    className="bg-[#FF5A3C] hover:bg-[#e64d2e] disabled:opacity-60 text-white px-5 rounded-lg font-bold transition"
+                    className="shrink-0 bg-[#FF5A3C] hover:bg-[#e64d2e] disabled:opacity-60 text-white px-5 rounded-lg font-bold transition"
                 >
                     {sending ? '...' : 'Send'}
                 </button>
